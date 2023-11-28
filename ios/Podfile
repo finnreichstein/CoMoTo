@@ -1,0 +1,37 @@
+# Definieren Sie eine globale Plattform für Ihr Projekt
+platform :ios, '11.0'
+
+# CocoaPods-Analytik sendet Netzwerkstatistiken synchron und beeinflusst die Latenz des Flutter-Builds.
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+target 'Runner' do
+  # Dieser Code wurde auskommentiert, um den Fehler zu beheben: undefined local variable or method `config'
+  # config.build_settings['Debug'] = :debug
+end
+
+def flutter_root
+  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+  unless File.exist?(generated_xcode_build_settings_path)
+    raise "#{generated_xcode_build_settings_path} muss existieren. Wenn Sie pod install manuell ausführen, stellen Sie sicher, dass flutter pub get zuerst ausgeführt wird"
+  end
+
+  File.foreach(generated_xcode_build_settings_path) do |line|
+    matches = line.match(/FLUTTER_ROOT\=(.*)/)
+    return matches[1].strip if matches
+  end
+  raise "FLUTTER_ROOT nicht gefunden in #{generated_xcode_build_settings_path}. Versuchen Sie, Generated.xcconfig zu löschen, und führen Sie dann flutter pub get aus"
+end
+
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+
+flutter_ios_podfile_setup
+
+# Das Ziel 'Runner' wurde entfernt, um den Fehler zu beheben: Das Ziel 'Runner' wird mehrmals deklariert.
+
+flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+  end
+end
